@@ -348,7 +348,7 @@ def create_db():
 
 if __name__ == '__main__':
     create_db()  # Create database tables if they don't exist
-    app.run(port=0000, debug=False)
+    app.run(host='0.0.0.0', port=10000)
 
 
 
