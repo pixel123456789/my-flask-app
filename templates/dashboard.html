@@ -296,6 +296,14 @@
         // Update the date and time display every second
         setInterval(updateDateTime, 1000);
 
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('active');
+        });
+
+        document.getElementById('close-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.remove('active');
+        });
+        
         // Initial call to display the date and time immediately
         updateDateTime();
     </script>
