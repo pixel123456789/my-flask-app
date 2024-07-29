@@ -131,5 +131,14 @@
     <footer>
         <p>&copy; 2024 Liam Kinnaird. All rights reserved.</p>
     </footer>
+    <script>
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('active');
+        });
+
+        document.getElementById('close-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.remove('active');
+        });
+    </script>
 </body>
 </html>
