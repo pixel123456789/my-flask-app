@@ -11,6 +11,9 @@ from flask_mail import Mail, Message
 from dotenv import load_dotenv
 import os
 import random
+import requests
+from threading import Thread
+import time
 
 # Load environment variables
 load_dotenv()
@@ -32,6 +35,21 @@ login_manager.login_view = 'login'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///users.db')  # Use environment variable or default to SQLite
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Keep-Alive Bot Setup
+urls = [
+    'https://my-flask-app-1pgq.onrender.com'
+]
+
+def keep_alive():
+    while True:
+        for url in urls:
+            try:
+                response = requests.get(url)
+                logger.info(f"Successfully pinged {url} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            except Exception as e:
+                logger.error(f"Error pinging {url}: {e}")
+        time.sleep(5 * 60)  # 5 minutes
 
 # Custom ID generator function
 def generate_quote_id():
@@ -123,7 +141,6 @@ class Review(db.Model):
     username = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 # Routes
 @app.route('/')
@@ -230,23 +247,6 @@ def dashboard():
 
     return render_template('dashboard.html', quotes=quotes, request_form=request_form, response_form=response_form, update_form=update_form)
 
-
-    if update_form.validate_on_submit() and current_user.id == 'admin':
-        content = update_form.update_content.data
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        new_update = Update(content=content, timestamp=timestamp)
-        db.session.add(new_update)
-        db.session.commit()
-        flash('Update added successfully', 'success')
-        return redirect(url_for('dashboard'))
-
-    if current_user.id == 'admin':
-        quotes = QuoteRequest.query.all()
-    else:
-        quotes = QuoteRequest.query.filter_by(user_id=current_user.id).all()
-
-    return render_template('dashboard.html', quotes=quotes, request_form=request_form, response_form=response_form, update_form=update_form)
-
 @app.route('/quote_details/<int:quote_id>')
 @login_required
 def quote_details(quote_id):
@@ -304,8 +304,6 @@ def contact():
 def success():
     return render_template('success.html')
 
-
-
 @app.route('/admin/messages')
 @login_required
 def view_messages():
@@ -339,7 +337,6 @@ def site_map():
     logger.debug('Rendering site map page')
     return render_template('sitemap.html')
 
-
 # Function to create the database tables
 def create_db():
     with app.app_context():
@@ -348,7 +345,8 @@ def create_db():
 
 if __name__ == '__main__':
     create_db()  # Create database tables if they don't exist
+    # Start keep-alive thread
+    keep_alive_thread = Thread(target=keep_alive)
+    keep_alive_thread.daemon = True
+    keep_alive_thread.start()
     app.run(host='0.0.0.0', port=10000)
-
-
-
