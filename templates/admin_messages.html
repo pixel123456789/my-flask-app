@@ -47,7 +47,6 @@
             </div>
         </nav>
     </header>
-
     <div class="dashboard-container">
         <h2>Contact Messages</h2>
         <table class="quote-table">
@@ -61,19 +60,63 @@
                 </tr>
             </thead>
             <tbody>
-                {% for message in messages %}
-                <tr>
-
-                    <td>{{ message.username }}</td>
-                    <td>{{ message.name }}</td>
-                    <td>{{ message.email }}</td>
-                    <td>{{ message.message }}</td>
-                    <td>{{ message.timestamp }}</td>
-                </tr>
-                {% endfor %}
+                {% if messages %}
+                    {% for message in messages %}
+                    <tr>
+                        <td>{{ message.username }}</td>
+                        <td>{{ message.name }}</td>
+                        <td>{{ message.email }}</td>
+                        <td>{{ message.message }}</td>
+                        <td>{{ message.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5">No messages found</td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
+    
+        <h2>Reviews</h2>
+        <table class="quote-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Review Text</th>
+                    <th>Rating</th>
+                    <th>Timestamp</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <tr>
+                        <td>{{ review.username }}</td>
+                        <td>{{ review.review_text }}</td>
+                        <td>{{ review.rating }}</td>
+                        <td>{{ review.timestamp }}</td>
+                        <td>{{ review.status }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('update_review_status') }}" style="display:inline;">
+                                <input type="hidden" name="review_id" value="{{ review.id }}">
+                                <button type="submit" name="action" value="accept" class="btn">Accept</button>
+                                <button type="submit" name="action" value="deny" class="btn">Deny</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6">No reviews found</td>
+                    </tr>
+                {% endif %}
+            </tbody>            
+        </table>
     </div>
+    
     <footer>
         <p>&copy; 2024 Liam Kinnaird. All rights reserved.</p>
     </footer>
