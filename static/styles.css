@@ -273,7 +273,7 @@ h3 {
     color: #333;
 }
 
-.form-container input, .form-container textarea, .contact-form input, .contact-form textarea, form input, form textarea, .form-control {
+.form-container input, .form-container textarea, .contact-form input, .contact-form textarea, form input, form textarea, .form-control, .review-form-container input{
     padding: 0.75rem;
     border-radius: 5px;
     border: 1px solid #ddd;
@@ -281,6 +281,7 @@ h3 {
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    width:100%;
 }
 
 .form-container textarea {
@@ -288,7 +289,7 @@ h3 {
     min-height: 100px;
 }
 
-.form-container button, .contact-form button, .btn, #review-form button {
+.form-container button, .contact-form button, .btn, #submit{
     background: #000;
     color: #fff;
     border: none;
@@ -300,7 +301,7 @@ h3 {
     transition: background 0.3s ease;
 }
 
-.form-container button:hover, .contact-form button:hover, .btn:hover, #review-form button:hover {
+.form-container button:hover, .contact-form button:hover, .btn:hover, #review-form button:hover, #submit:hover {
     background: #1e1e1e;
 }
 
@@ -509,7 +510,7 @@ h3 {
     }
 }
 
-//* Flash Message Styling */
+/* Flash Message Styling */
 .flash-message {
     font-family: 'Courier New', Courier, monospace;
     width: 50%;
@@ -578,11 +579,11 @@ h3 {
     background-color:#1e1e1e
 }
 
-#reviews h2 {
+.review-form-container h2 {
     text-align: center;
     font-size: 2.5em;
     margin-top: 0;
-    color:white
+    color:#333
 }
 
 .review-form-container {
@@ -592,6 +593,11 @@ h3 {
     padding: 2em;
     border-radius: 8px;
     box-shadow:0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align:center;
+}
+
+#clr{
+    color:white;
 }
 
 #review-form input,
@@ -669,7 +675,7 @@ h3 {
     color: #ffcc00;
 }
 
-#review-form .rating-display {
+.rating-display {
     font-size: 1rem;
     margin: 0.5em 0;
 }
@@ -964,4 +970,55 @@ ul li a {
     #hamburger-menu {
         display: block;
     }
+}
+
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1em;
+    margin-top: 2em;
+}
+
+.review-item {
+    background: #fff;
+    padding: 1em;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.review-item .stars {
+    color: #ffcc00;
+    font-size: 1.2rem;
+}
+
+.review-item .review-content {
+    font-size: 1rem;
+    margin-top: 0.5em;
+    line-height: 1.4;
+}
+
+.review-navigation {
+    text-align: center;
+    margin-top: 2em;
+}
+
+.review-navigation button {
+    background: #ff9900;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.review-navigation button:hover {
+    background: #cc7a00;
+}
+
+#prev-button {
+    margin-right: 1em;
 }
