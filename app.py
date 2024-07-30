@@ -136,17 +136,39 @@ class ContactForm(FlaskForm):
     message = TextAreaField('Message', validators=[DataRequired()])
     submit = SubmitField('Send Message')
 
+class Review_Form(FlaskForm):
+    review_text = TextAreaField('Review Text', validators=[DataRequired()])
+    rating = FloatField('Rating (1-5)', validators=[DataRequired()])
+    submit = SubmitField('Submit Review')
+
+# Review model
+
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=False)
+    review_text = db.Column(db.Text, nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='pending')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'review_text': self.review_text,
+            'rating': self.rating,
+            'timestamp': self.timestamp.isoformat(),  # Convert datetime to ISO format
+            'status': self.status
+        }
+
+
 
 # Routes
 @app.route('/')
 def home():
+    review_form = Review_Form()  # Create an instance of ReviewForm
     logger.debug('Rendering home page')
-    return render_template('index.html')
+    return render_template('index.html', review_form=review_form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -263,12 +285,50 @@ def quote_details(quote_id):
         'quote_price': quote.quote_price
     })
 
+@app.route('/api/reviews')
+@login_required
+def api_reviews():
+    reviews = Review.query.all()
+    review_list = [
+        [
+            review.id,
+            review.username,
+            review.review_text,
+            review.rating,
+            review.timestamp.isoformat(),  # Convert datetime to ISO format
+            review.status
+        ]
+        for review in reviews
+    ]
+    print("Reviews data:", review_list)  # Add this line to debug
+    return jsonify(review_list)
+
+
 @app.route('/get_updates')
 @login_required
 def get_updates():
     updates = Update.query.order_by(Update.timestamp.desc()).all()
     updates_list = [{'content': update.content, 'timestamp': update.timestamp} for update in updates]
     return jsonify(updates_list)
+
+@app.route('/update_review_status', methods=['POST'])
+def update_review_status():
+    review_id = request.form.get('review_id')
+    action = request.form.get('action')
+    
+    review = Review.query.get(review_id)
+    
+    if review:
+        if action == 'accept':
+            review.status = 'Accepted'
+        elif action == 'deny':
+            review.status = 'Denied'
+        db.session.commit()
+        flash(f'Review {action.capitalize()}d successfully!', 'success')
+    else:
+        flash('Review not found!', 'error')
+
+    return redirect(url_for('admin_messages'))
 
 @app.route('/add_update', methods=['POST'])
 @login_required
@@ -305,32 +365,53 @@ def success():
     return render_template('success.html')
 
 @app.route('/admin/messages')
+def admin_messages():
+    contact_messages = ContactMessage.query.all()  # Fetch all contact messages
+    reviews = Review.query.all()  # Fetch all reviews
+    
+    # Convert Review objects to dictionaries
+    reviews_dict = [review.to_dict() for review in reviews]
+    
+    return render_template('admin_messages.html', messages=contact_messages, reviews=reviews_dict)
+
+
+
+
+
+@app.route('/submit_review', methods=['POST'])
 @login_required
-def view_messages():
+def submit_review():
+    form = Review_Form()
+    if form.validate_on_submit():
+        review = Review(
+            username=current_user.id,  # Use the currently logged-in user's ID
+            review_text=form.review_text.data,
+            rating=form.rating.data,
+            timestamp=datetime.utcnow(),
+            status='pending'
+        )
+        db.session.add(review)
+        db.session.commit()
+        logger.info(f'Review submitted by {current_user.id}')
+        return redirect(url_for('home'))
+        flash('Review submitted successfully!', 'success')
+        
+    flash('There was an error submitting the review. Please try again.', 'danger')
+    return redirect(url_for('home'))
+
+
+
+@app.route('/admin/reviews')
+@login_required
+def view_reviews():
     if current_user.id != 'admin':
         flash('Unauthorized access', 'danger')
         return redirect(url_for('home'))
 
-    messages = ContactMessage.query.order_by(ContactMessage.timestamp.desc()).all()
-    return render_template('admin_messages.html', messages=messages)
-
-@app.route('/add_review', methods=['POST'])
-def add_review():
-    data = request.get_json()
-    username = data.get('username')
-    content = data.get('content')
-    
-    if username and content:
-        new_review = Review(username=username, content=content)
-        db.session.add(new_review)
-        db.session.commit()
-        return jsonify({'success': True})
-    return jsonify({'success': False})
-
-@app.route('/get_reviews', methods=['GET'])
-def get_reviews():
     reviews = Review.query.order_by(Review.timestamp.desc()).all()
-    return jsonify([{'username': review.username, 'content': review.content} for review in reviews])
+    return render_template('admin_messages.html', messages=None, reviews=reviews)
+
+
 
 @app.route('/site_map')
 def site_map():
