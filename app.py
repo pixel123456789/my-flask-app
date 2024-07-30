@@ -49,7 +49,11 @@ def keep_alive():
                 logger.info(f"Successfully pinged {url} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             except Exception as e:
                 logger.error(f"Error pinging {url}: {e}")
-        time.sleep(5 * 60)  # 5 minutes
+        
+        # Sleep for a random interval between 3 and 7 minutes
+        sleep_time = random.uniform(3 * 60, 7 * 60)  # Random time in seconds
+        logger.info(f"Sleeping for {sleep_time} seconds")
+        time.sleep(sleep_time)
 
 # Custom ID generator function
 def generate_quote_id():
