@@ -72,7 +72,7 @@
             {% if current_user.id == 'admin' %}
             <div class="form-container">
                 <h3>View Contact Form Messages</h3>
-                <a href="{{ url_for('view_messages') }}"><button class="btn">Open Inbox</button></a>
+                <a href="{{ url_for('admin_messages') }}"><button class="btn">Open Inbox</button></a>
             </div>
              {% endif %}
 
