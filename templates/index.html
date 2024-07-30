@@ -6,6 +6,34 @@
     <title>Liam | Web Developer Portfolio</title>
     <link rel="stylesheet" href="static/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Add custom styles for the review grid and pagination */
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            opacity: 0;
+        }
+
+        .review-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .review-item:hover {
+            transform: scale(1.05);
+        }
+
+        .review-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -29,19 +57,13 @@
                 <button id="close-btn" class="close-btn">&times;</button>
                 <ul>
                     <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <br>
                     {% if current_user.is_authenticated %}
                         <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                        <br>
                         <li><a href="{{ url_for('home') }}#contact">Contact</a></li>
-                        <br>
                         <li><a href="{{ url_for('logout') }}">Logout</a></li>
-                        <br>
                     {% else %}
                         <li><a href="{{ url_for('home') }}#contact">Contact</a></li>
-                        <br>
                         <li><a href="{{ url_for('register') }}">Register</a></li>
-                        <br>
                         <li><a href="{{ url_for('login') }}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -65,7 +87,7 @@
             <h1>Hello, I'm Liam!</h1>
             <div class="line"></div>
             <p>Turning ideas into interactive experiences with a touch of creativity and a lot of passion.</p>
-            <a href="{{ url_for('site_map') }}" ><button class="btn-orange">Click To Learn About This Site</button></a>
+            <a href="{{ url_for('site_map') }}"><button class="btn-orange">Click To Learn About This Site</button></a>
         </div>
     </section>
 
@@ -73,8 +95,8 @@
         <div class="about-content">
             <h2>About Me</h2>
             <p>Hello! I am a dedicated student currently studying for a Scottish Higher in Computing Science. My journey into web development and software engineering is driven by a passion for technology and a desire to enhance my skills in these dynamic fields.</p>
-        <p>As I continue my studies, I am eager to deepen my understanding of web development, programming, and software design. My goal is to pursue a fulfilling career in the tech industry, where I can contribute to innovative projects and make a meaningful impact.</p>
-        <p>I am excited about the possibilities that lie ahead and am committed to continually learning and growing as a developer.</p>
+            <p>As I continue my studies, I am eager to deepen my understanding of web development, programming, and software design. My goal is to pursue a fulfilling career in the tech industry, where I can contribute to innovative projects and make a meaningful impact.</p>
+            <p>I am excited about the possibilities that lie ahead and am committed to continually learning and growing as a developer.</p>
         </div>
     </section>
 
@@ -105,27 +127,32 @@
     </section>
 
     <section id="reviews">
-        <h2>Reviews</h2>
+        <h2 id="clr">Reviews</h2>
         <div class="review-form-container">
-            <form id="review-form">
-                <input type="text" id="username" name="username" placeholder="Your Name" required>
-                <input type="text" id="order-id" name="order-id" placeholder="Your Order ID" required>
-                <textarea id="content" name="content" placeholder="Your Review" required></textarea>
-                <div class="star-rating" id="star-rating">
-                    <span class="star inactive" data-value="1">★</span>
-                    <span class="star inactive" data-value="2">★</span>
-                    <span class="star inactive" data-value="3">★</span>
-                    <span class="star inactive" data-value="4">★</span>
-                    <span class="star inactive" data-value="5">★</span>
+            <h2>Submit Your Review</h2>
+            <form action="{{ url_for('submit_review') }}" method="post" id="review-form">
+                {{ review_form.hidden_tag() }}
+                <div>
+                    {{ review_form.review_text.label }}<br>
+                    {{ review_form.review_text(size=40, rows=5) }}
                 </div>
-                <div class="rating-display" id="rating-display">Rating: 0</div>
-                <button type="submit">Submit</button>
-                <div id="form-errors" class="error-messages"></div>
+                <div>
+                    {{ review_form.rating.label }}<br>
+                    {{ review_form.rating() }}
+                </div>
+                <div>
+                    {{ review_form.submit() }}
+                </div>
             </form>
         </div>
+    
         <div id="reviews-container">
-            <div class="review-carousel" id="review-carousel">
-                <!-- Reviews will be appended here -->
+            <div id="review-grid" class="review-grid">
+                <!-- Review items will be dynamically inserted here -->
+            </div>
+            <div class="review-navigation">
+                <button id="prev-button">Previous</button>
+                <button id="next-button">Next</button>
             </div>
         </div>
     </section>
@@ -148,9 +175,6 @@
         </div>
     </section>
 
-    
-    <!-- Section Separator -->
-
     <footer>
         <p>&copy; 2024 Liam Kinnaird. All rights reserved.</p>
     </footer>
@@ -159,182 +183,134 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/ScrollTrigger.min.js"></script>
     <script src="static/scripts.js"></script>
-    <script>
-        // Function to update date and time
-        function updateDateTime() {
-            const now = new Date();
-            const dateTimeString = now.toLocaleString('en-US', {
-                dateStyle: 'medium',
-                timeStyle: 'medium',
-                hour12: true
-            });
-            document.getElementById('dateTime').innerText = dateTimeString;
-        }
-
-        // Update the date and time every second
-        setInterval(updateDateTime, 1000);
-        // Initial call to display the date and time immediately
-        updateDateTime();
-
-       // Handle star rating selection
-const starRatingContainer = document.getElementById('star-rating');
-const ratingDisplay = document.getElementById('rating-display');
-const errorMessages = document.getElementById('form-errors');
-let selectedRating = 0;
-
-starRatingContainer.addEventListener('click', function(event) {
-    if (event.target.classList.contains('star')) {
-        selectedRating = parseInt(event.target.dataset.value);
-        updateStarRating();
-        ratingDisplay.textContent = `Rating: ${selectedRating}`;
-    }
-});
-
-function updateStarRating() {
-    const stars = starRatingContainer.querySelectorAll('.star');
-    stars.forEach(star => {
-        if (parseInt(star.dataset.value) <= selectedRating) {
-            star.classList.add('active');
-            star.classList.remove('inactive');
-        } else {
-            star.classList.add('inactive');
-            star.classList.remove('active');
-        }
-    });
-}
-
-// Handle review form submission
-document.getElementById('review-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
-    const username = document.getElementById('username').value.trim();
-    const content = document.getElementById('content').value.trim();
-    const orderId = document.getElementById('order-id').value.trim();
-
-    // Clear previous error messages
-    errorMessages.textContent = '';
-    
-    if (selectedRating === 0) {
-        showError('Please select a rating.');
-        return;
+   <script>
+    // Function to update date and time
+    function updateDateTime() {
+        const now = new Date();
+        const dateTimeString = now.toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'medium',
+            hour12: true
+        });
+        document.getElementById('dateTime').innerText = dateTimeString;
     }
 
-    fetch('/validate_order', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ orderId: orderId })
-    }).then(response => response.json())
-      .then(data => {
-        if (data.valid) {
-            fetch('/add_review', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username,
-                    content: content,
-                    rating: selectedRating
-                })
-            }).then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                    addReviewToCarousel(username, content, selectedRating);
-                    document.getElementById('review-form').reset();
-                    selectedRating = 0;
-                    updateStarRating();
+    // Update the date and time every second
+    setInterval(updateDateTime, 1000);
+    // Initial call to display the date and time immediately
+    updateDateTime();
+
+    let reviews = [];
+    let currentPage = 1;
+    const reviewsPerPage = 4;
+
+    // Render reviews function with animation
+    function renderReviews() {
+        const reviewGrid = document.getElementById('review-grid');
+        reviewGrid.innerHTML = ''; // Clear existing reviews
+
+        // Calculate start and end index for current page
+        const startIndex = (currentPage - 1) * reviewsPerPage;
+        const endIndex = startIndex + reviewsPerPage;
+        const reviewsToShow = reviews.slice(startIndex, endIndex);
+
+        reviewsToShow.forEach(review => {
+            const [id, username, reviewText, rating, timestamp, status] = review;
+
+            // Create review item element
+            const reviewItem = document.createElement('div');
+            reviewItem.className = 'review-item';
+            reviewItem.innerHTML = `
+                <div class="stars">${'★'.repeat(rating)}</div>
+                <div class="review-content">${reviewText}</div>
+                <div class="review-author">- ${username}</div>
+            `;
+            
+            reviewGrid.appendChild(reviewItem);
+        });
+
+        // GSAP animation for the review grid
+        gsap.fromTo("#review-grid", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1, ease: "power2.out" });
+
+        // Update button visibility
+        document.getElementById('prev-button').style.display = currentPage > 1 ? 'block' : 'none';
+        document.getElementById('next-button').style.display = endIndex < reviews.length ? 'block' : 'none';
+    }
+
+    // Load reviews function
+    function loadReviews() {
+        fetch('/api/reviews')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Reviews data:', data); // Debugging line to see the raw data
+
+                // Ensure data is an array of arrays
+                if (Array.isArray(data)) {
+                    // Filter approved reviews
+                    reviews = data.filter(review => review[5] === 'Approved');
+                    renderReviews(); // Render initial reviews
                 } else {
-                    showError('Failed to submit review. Please try again.');
+                    console.error('Reviews data is not an array:', data);
+                    document.getElementById('review-grid').innerHTML = '<p>Failed to load reviews.</p>';
                 }
-            }).catch(error => {
-                console.error('Error:', error);
-                showError('An unexpected error occurred. Please try again later.');
+            })
+            .catch(error => {
+                console.error('Error fetching reviews:', error);
+                document.getElementById('review-grid').innerHTML = '<p>Error fetching reviews.</p>';
             });
-        } else {
-            showError('Invalid Order ID. Please check and try again.');
-        }
-    }).catch(error => {
-        console.error('Error:', error);
-        showError('An unexpected error occurred. Please try again later.');
-    });
-});
-
-function showError(message) {
-    errorMessages.textContent = message;
-}
-
-// Function to add a review to the carousel
-function addReviewToCarousel(username, content, rating) {
-    const reviewsContainer = document.getElementById('review-carousel');
-    const reviewItem = document.createElement('div');
-    reviewItem.className = 'review-item';
-    reviewItem.innerHTML = `
-        <div class="stars">${'⭐'.repeat(rating)}</div>
-        <div class="review-content">
-            <strong>${username}</strong>: <p>${content}</p>
-        </div>
-    `;
-    reviewsContainer.appendChild(reviewItem);
-}
-
-// Function to initialize the carousel
-function initializeCarousel() {
-    const reviewItems = document.querySelectorAll('#review-carousel .review-item');
-    let currentIndex = 0;
-    const intervalTime = 3000; // Adjust this time as needed
-
-    function updateCarousel() {
-        reviewItems.forEach((item, index) => {
-            item.style.transform = `translateX(-${currentIndex * 100}%)`;
-        });
     }
 
-    function autoScroll() {
-        currentIndex = (currentIndex + 1) % reviewItems.length;
-        updateCarousel();
-    }
+    // Handle form submission
+    window.onload = function() {
+        console.log('Window loaded');
 
-    updateCarousel(); // Initialize carousel position
-    setInterval(autoScroll, intervalTime); // Automatically scroll every `intervalTime` milliseconds
-}
-
-// Fetch and display existing reviews
-function loadReviews() {
-    fetch('/get_reviews')
-        .then(response => response.json())
-        .then(reviews => {
-            reviews.forEach(review => {
-                addReviewToCarousel(review.username, review.content, review.rating);
-            });
-            initializeCarousel();
-        }).catch(error => {
-            console.error('Error:', error);
-            showError('Failed to load reviews. Please try again later.');
-        });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-        const button = document.querySelector('.hero-button');
-        if (button) {
-            button.classList.remove('hidden');
-            button.classList.add('show');
-        }
-    });
-
-// Mobile menu functionality
-document.getElementById('hamburger-menu').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('active');
+        // Handle form submission
+        const form = document.getElementById('review-form');
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Review submitted successfully!');
+                    form.reset(); // Clear the form fields
+                    window.location.reload(); // Reload the page
+                } else {
+                    alert('Error submitting review: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
         });
 
-        document.getElementById('close-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.remove('active');
+        // Load reviews on page load
+        loadReviews();
+
+        // Handle pagination
+        document.getElementById('prev-button').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderReviews();
+            }
         });
 
-// Load reviews on page load
-window.addEventListener('load', loadReviews);
+        document.getElementById('next-button').addEventListener('click', function() {
+            if (currentPage * reviewsPerPage < reviews.length) {
+                currentPage++;
+                renderReviews();
+            }
+        });
+    };
+</script>
 
-    </script>
 </body>
 </html>
